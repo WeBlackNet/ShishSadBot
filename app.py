@@ -1,11 +1,10 @@
 from telegram import Update, ChatPermissions
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-from telegram.request import BaseRequest
 import logging
 import datetime
 import time
 import requests
-import socks
+
 
 # فعال‌سازی لاگ‌گیری
 logging.basicConfig(
@@ -15,9 +14,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 TOKEN = "8184101432:AAECgR7GKmvbENbI6otRQPnkTSKS4M6wpyk"  # جایگزین کن با توکن واقعی
-PROXY_HOST = "212.111.80.159"  # آدرس سرور پروکسی
-PROXY_PORT = 443                # پورت پروکسی
-PROXY_SECRET = "eed77db43ee3721f0fcb40a4ff63b5cd276D656469612E737465616D706F77657265642E636F6D"  # کلید مخفی پروکسی
 
 # ذخیره آخرین پیام‌های کاربران
 last_messages = {}
@@ -38,22 +34,6 @@ KEYWORDS = {
     "ازاد": "unmute_user",
     "آزاد": "unmute_user"
 }
-
-
-# کلاس درخواست سفارشی با پشتیبانی از پروکسی MTProto
-class MTProxyRequest(BaseRequest):
-    def __init__(self, proxy_url=None, **kwargs):
-        super().__init__(**kwargs)
-        self.proxy_url = proxy_url
-    
-    def _prepare_request(self, *args, **kwargs):
-        # تنظیمات پروکسی برای درخواست‌ها
-        if self.proxy_url:
-            kwargs['proxies'] = {
-                'http': self.proxy_url,
-                'https': self.proxy_url
-            }
-   
 
 # مجوزهای سکوت (فقط خواندن)
 # MUTE_PERMISSIONS = ChatPermissions(
@@ -290,26 +270,9 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.warning(f'خطا: {context.error}')
 
 
-def create_proxy_client():
-    """ایجاد کلاینت تلگرام با پشتیبانی از پروکسی MTProto"""
-    client = TelegramClient(
-        StringSession(),
-        api_id=12345,  # API ID خود را وارد کنید
-        api_hash='your_api_hash',  # API Hash خود را وارد کنید
-        connection=ConnectionTcpMTProxy,
-        proxy=(PROXY_HOST, PROXY_PORT, PROXY_SECRET)
-    )
-    return client
-
 def main():
-     # ساخت درخواست سفارشی با پروکسی MTProto
-    proxy_url = f"socks5://{PROXY_HOST}:{PROXY_PORT}"
-    request = MTProxyRequest(proxy_url=proxy_url)
-    
-    # ساخت اپلیکیشن با درخواست سفارشی
-    application = Application.builder().token(TOKEN).request(request).build()
-
-    print(">>> ربات با پروکسی MTProto فعال شد! CTRL+C برای توقف")
+    # ساخت اپلیکیشن و پاس دادن توکن
+    application = Application.builder().token(TOKEN).build()
 
     # دستورات اسلش
     application.add_handler(CommandHandler("start", start))
@@ -328,7 +291,7 @@ def main():
     application.add_error_handler(error)
 
     # شروع ربات
-    print(">>> ربات با پروکسی MTProto فعال شد! CTRL+C برای توقف")
+    print(">>> ربات فعال شد! CTRL+C برای توقف")
     application.run_polling()
 
 if __name__ == '__main__':
